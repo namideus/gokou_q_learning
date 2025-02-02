@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI vs AI Live Game</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(9, 40px);
+            gap: 1px;
+            background: #333;
+            padding: 5px;
+            margin: 20px auto;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: background 0.3s;
+        }
+        .cell.x { color: #ff4757; }
+        .cell.o { color: #2ed573; }
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">AI vs AI Live Match</h1>
+    <div class="controls">
+        <button onclick="startPlayback()">Start Game</button>
+        <button onclick="resetBoard()">Reset</button>
+    </div>
+    <div id="board-container" style="text-align: center;"></div>
+    <h2 id="result" style="text-align: center;"></h2>
+
+    <script>
+        let currentMove = 0;
+        let moves = {{ moves|tojson }};
+        let winner = "{{ winner }}";
+        
+        function createBoard() {
+            const container = document.getElementById('board-container');
+            const board = document.createElement('div');
+            board.className = 'board';
+            
+            for(let i = 0; i < 81; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                board.appendChild(cell);
+            }
+            
+            container.innerHTML = '';
+            container.appendChild(board);
+            return board;
+        }
+
+        function updateBoard(move) {
+            const board = document.querySelector('.board');
+            const cells = board.children;
+            
+            // Flatten the 2D list board
+            const flatBoard = move.board.flat();
+            
+            flatBoard.forEach((cell, index) => {
+                cells[index].className = 'cell' + (cell === 'X' ? ' x' : cell === 'O' ? ' o' : '');
+                cells[index].textContent = cell === 'X' ? '❌' : cell === 'O' ? '⭕' : '';
+            });
+            
+            // Highlight latest move
+            const [row, col] = move.position;
+            const cellIndex = row * 9 + col;
+            cells[cellIndex].style.background = '#ffeaa7';
+            setTimeout(() => {
+                cells[cellIndex].style.background = '';
+            }, 500);
+        }
+
+        function startPlayback() {
+            currentMove = 0;
+            const board = createBoard();
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = '';
+            
+            function playNextMove() {
+                if(currentMove < moves.length) {
+                    updateBoard(moves[currentMove]);
+                    currentMove++;
+                    setTimeout(playNextMove, 500); // 0.5s between moves
+                } else {
+                    resultElement.textContent = winner ? 
+                        `Winner: ${winner}` : 
+                        "It's a draw!";
+                }
+            }
+            
+            playNextMove();
+        }
+
+        function resetBoard() {
+            currentMove = 0;
+            createBoard();
+            document.getElementById('result').textContent = '';
+        }
+
+        // Initialize empty board on load
+        window.onload = createBoard;
+    </script>
+</body>
+</html>
